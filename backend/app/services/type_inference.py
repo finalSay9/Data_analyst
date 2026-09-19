@@ -16,6 +16,8 @@ judgment call we're making on purpose, not something pandas decided for us.
 import enum
 
 import pandas as pd
+from sqlalchemy import Boolean, DateTime, Float, Integer, Text
+from sqlalchemy.types import TypeEngine
 
 
 class ColumnType(str, enum.Enum):
@@ -26,13 +28,25 @@ class ColumnType(str, enum.Enum):
     STRING = "string"
 
 
-# Maps our type system -> actual Postgres column type used in dynamic DDL.
+# Maps our type system -> actual Postgres column type name (for display/docs).
 POSTGRES_TYPE_MAP: dict[ColumnType, str] = {
     ColumnType.INTEGER: "INTEGER",
     ColumnType.FLOAT: "FLOAT",
     ColumnType.BOOLEAN: "BOOLEAN",
     ColumnType.DATETIME: "TIMESTAMP",
     ColumnType.STRING: "TEXT",
+}
+
+# Maps our type system -> SQLAlchemy Core type object, used to actually
+# build dynamic table DDL. Dialect-agnostic on purpose: this lets us test
+# the ingestion pipeline against SQLite in-memory, while it still produces
+# correct DDL against the real Postgres engine in production.
+SQLALCHEMY_TYPE_MAP: dict[ColumnType, type[TypeEngine]] = {
+    ColumnType.INTEGER: Integer,
+    ColumnType.FLOAT: Float,
+    ColumnType.BOOLEAN: Boolean,
+    ColumnType.DATETIME: DateTime,
+    ColumnType.STRING: Text,
 }
 
 # Threshold for treating an `object` column as datetime: at least this
@@ -120,3 +134,8 @@ def infer_column_type(series: pd.Series) -> ColumnType:
 
 def postgres_type_for(column_type: ColumnType) -> str:
     return POSTGRES_TYPE_MAP[column_type]
+
+
+def sqlalchemy_type_for(column_type: ColumnType) -> TypeEngine:
+    """Returns an *instance* of the SQLAlchemy type, ready to use in a Column()."""
+    return SQLALCHEMY_TYPE_MAP[column_type]()

@@ -35,3 +35,16 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+
+def get_engine():
+    """
+    FastAPI dependency exposing the raw Engine, separate from get_db().
+
+    The ORM session (get_db) manages the fixed schema (Dataset,
+    DatasetColumn). The ingestion service also needs the raw Engine for
+    dynamic DDL (CREATE TABLE) and Core-level inserts against tables that
+    have no ORM model — hence exposing both as separate dependencies
+    rather than smuggling the engine off of the session.
+    """
+    return engine

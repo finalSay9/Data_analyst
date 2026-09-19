@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.api.v1 import datasets
 from app.core.config import settings
 
 app = FastAPI(
@@ -14,6 +15,4 @@ def health_check() -> dict:
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 
 
-# Routers get included here as we build them in api/v1/
-# from app.api.v1 import datasets
-# app.include_router(datasets.router, prefix="/api/v1/datasets", tags=["datasets"])
+app.include_router(datasets.router, prefix="/api/v1/datasets", tags=["datasets"])
