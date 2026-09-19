@@ -20,8 +20,15 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db, get_engine
 from app.models.dataset import Dataset
-from app.schemas.dataset import DatasetRead, DatasetSummary, DatasetUploadResponse
+from app.schemas.dataset import (
+    ColumnProfileRead,
+    DatasetProfileResponse,
+    DatasetRead,
+    DatasetSummary,
+    DatasetUploadResponse,
+)
 from app.services.ingestion_service import UnsupportedFileTypeError, ingest_file
+from app.analytics.profiling import profile_dataset
 
 router = APIRouter()
 
@@ -88,3 +95,22 @@ def get_dataset(dataset_id: int, db: Session = Depends(get_db)) -> Dataset:
     if dataset is None:
         raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
     return dataset
+
+
+@router.get("/{dataset_id}/profile", response_model=DatasetProfileResponse)
+def get_dataset_profile(
+    dataset_id: int,
+    db: Session = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> DatasetProfileResponse:
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+
+    profiles = profile_dataset(engine, dataset)
+
+    return DatasetProfileResponse(
+        dataset_id=dataset.id,
+        row_count=dataset.row_count,
+        columns=[ColumnProfileRead(**vars(p)) for p in profiles],
+    )

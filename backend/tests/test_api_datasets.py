@@ -122,3 +122,27 @@ class TestGetByIdEndpoint:
     def test_get_nonexistent_dataset_returns_404(self, client):
         response = client.get("/api/v1/datasets/99999")
         assert response.status_code == 404
+
+
+class TestProfileEndpoint:
+    def test_profile_returns_stats_for_each_column(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload",
+            files=make_csv_file("score,label\n10,a\n20,b\n30,a\n"),
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(f"/api/v1/datasets/{dataset_id}/profile")
+        assert response.status_code == 200
+
+        body = response.json()
+        assert body["row_count"] == 3
+        columns = {c["name"]: c for c in body["columns"]}
+
+        assert columns["score"]["mean"] == 20.0
+        assert columns["score"]["min_value"] == 10
+        assert columns["label"]["top_values"][0]["value"] == "a"
+
+    def test_profile_nonexistent_dataset_returns_404(self, client):
+        response = client.get("/api/v1/datasets/99999/profile")
+        assert response.status_code == 404

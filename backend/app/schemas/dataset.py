@@ -50,6 +50,30 @@ class DatasetSummary(BaseModel):
     created_at: datetime
 
 
+class ColumnProfileRead(BaseModel):
+    name: str
+    inferred_type: str
+    null_count: int
+    null_percentage: float
+    unique_count: int
+    min_value: float | None = None
+    max_value: float | None = None
+    mean: float | None = None
+    median: float | None = None
+    std_dev: float | None = None
+    true_count: int | None = None
+    false_count: int | None = None
+    min_date: str | None = None
+    max_date: str | None = None
+    top_values: list[dict] = []
+
+
+class DatasetProfileResponse(BaseModel):
+    dataset_id: int
+    row_count: int
+    columns: list[ColumnProfileRead]
+
+
 class FailedRow(BaseModel):
     row_index: int
     error: str
