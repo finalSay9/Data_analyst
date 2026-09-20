@@ -71,11 +71,41 @@ backend/
 
 ### Status
 
+**Phase 1 — Data Fundamentals: complete.**
+
 - [x] Project scaffold
 - [x] Config + database wiring
 - [x] `Dataset` / `DatasetColumn` models
-- [ ] First Alembic migration (run locally — needs Docker)
-- [ ] CSV/Excel ingestion service (dynamic table creation, type inference)
-- [ ] Dataset profiling service
-- [ ] `POST /datasets/upload`, `GET /datasets/{id}`, `GET /datasets/{id}/profile`
-- [ ] Tests
+- [x] First Alembic migration
+- [x] CSV/Excel ingestion service (dynamic table creation, type inference,
+      identifier sanitization, savepoint-based partial-failure recovery)
+- [x] Dataset profiling service (per-column stats, type-driven)
+- [x] `POST /datasets/upload`, `GET /datasets`, `GET /datasets/{id}`,
+      `GET /datasets/{id}/profile`
+- [x] Tests (71 passing — type inference, naming/sanitization, ingestion,
+      profiling, API layer)
+- [x] Frontend scaffold (Vite + React + Tailwind v4) — dataset list,
+      upload with drag-and-drop, dataset detail/profile view
+
+### Real bugs hit and fixed along the way (worth remembering)
+
+- **pandas 3.0's string dtype change**: type inference only checked
+  `is_object_dtype`, missing pandas 3.0+'s dedicated `StringDtype`.
+  Fixed by checking both.
+- **Type detection vs. type coercion are different steps**: inferring a
+  column is `DATETIME` doesn't convert its values — a column full of
+  `"2024-01-01"` strings still needs an explicit `pd.to_datetime()` pass
+  before it can bind to a SQLAlchemy `DateTime` column. Same for
+  nullable-integer columns pandas stores as `float64`.
+- **SQLite `:memory:` + FastAPI's `TestClient` run in different
+  threads**: fixed with `StaticPool` + `check_same_thread=False` in test
+  fixtures. Postgres doesn't have this issue — SQLite-only gotcha.
+- **Ordering by timestamp alone breaks on ties**: two rows created
+  within the same clock tick sort unpredictably; added `id` as a
+  secondary sort key.
+
+### Next: Phase 2 — Analytics Engine
+
+Aggregations, descriptive statistics, correlations, distributions,
+outlier detection, time-series analysis — building on the profiling
+service's foundation.

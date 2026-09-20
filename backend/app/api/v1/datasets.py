@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.core.database import get_db, get_engine
 from app.models.dataset import Dataset
 from app.schemas.dataset import (
+    ColumnOutliersRead,
     ColumnProfileRead,
     CorrelationPairRead,
     CorrelationResponse,
@@ -28,10 +29,13 @@ from app.schemas.dataset import (
     DatasetRead,
     DatasetSummary,
     DatasetUploadResponse,
+    OutlierPointRead,
+    OutlierResponse,
 )
 from app.services.ingestion_service import UnsupportedFileTypeError, ingest_file
 from app.analytics.profiling import profile_dataset
 from app.analytics.statistics import compute_correlations
+from app.analytics.outliers import detect_outliers
 
 router = APIRouter()
 
@@ -137,4 +141,35 @@ def get_dataset_correlations(
         matrix=result.matrix,
         pairs=[CorrelationPairRead(**vars(p)) for p in result.pairs],
         insufficient_columns=result.insufficient_columns,
+    )
+
+
+@router.get("/{dataset_id}/outliers", response_model=OutlierResponse)
+def get_dataset_outliers(
+    dataset_id: int,
+    db: Session = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> OutlierResponse:
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+
+    result = detect_outliers(engine, dataset)
+
+    return OutlierResponse(
+        dataset_id=dataset.id,
+        columns=[
+            ColumnOutliersRead(
+                column=c.column,
+                q1=c.q1,
+                q3=c.q3,
+                iqr=c.iqr,
+                lower_bound=c.lower_bound,
+                upper_bound=c.upper_bound,
+                outlier_count=c.outlier_count,
+                outlier_percentage=c.outlier_percentage,
+                sample_outliers=[OutlierPointRead(**vars(p)) for p in c.sample_outliers],
+            )
+            for c in result.columns
+        ],
     )

@@ -89,6 +89,29 @@ class CorrelationResponse(BaseModel):
     insufficient_columns: bool = False
 
 
+class OutlierPointRead(BaseModel):
+    row_id: int
+    value: float
+    distance_from_bound: float
+
+
+class ColumnOutliersRead(BaseModel):
+    column: str
+    q1: float
+    q3: float
+    iqr: float
+    lower_bound: float
+    upper_bound: float
+    outlier_count: int
+    outlier_percentage: float
+    sample_outliers: list[OutlierPointRead] = []
+
+
+class OutlierResponse(BaseModel):
+    dataset_id: int
+    columns: list[ColumnOutliersRead] = []
+
+
 class FailedRow(BaseModel):
     row_index: int
     error: str

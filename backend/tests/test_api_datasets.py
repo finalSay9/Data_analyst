@@ -178,3 +178,24 @@ class TestCorrelationsEndpoint:
     def test_correlations_nonexistent_dataset_returns_404(self, client):
         response = client.get("/api/v1/datasets/99999/correlations")
         assert response.status_code == 404
+
+
+class TestOutliersEndpoint:
+    def test_outliers_detected_for_numeric_columns(self, client):
+        csv_content = "value\n" + "\n".join(["10"] * 20) + "\n1000\n"
+        upload_response = client.post(
+            "/api/v1/datasets/upload", files=make_csv_file(csv_content)
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(f"/api/v1/datasets/{dataset_id}/outliers")
+        assert response.status_code == 200
+
+        body = response.json()
+        col = next(c for c in body["columns"] if c["column"] == "value")
+        assert col["outlier_count"] == 1
+        assert col["sample_outliers"][0]["value"] == 1000.0
+
+    def test_outliers_nonexistent_dataset_returns_404(self, client):
+        response = client.get("/api/v1/datasets/99999/outliers")
+        assert response.status_code == 404

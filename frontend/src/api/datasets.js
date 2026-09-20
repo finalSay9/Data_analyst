@@ -27,6 +27,11 @@ export async function getDatasetCorrelations(id) {
   return data;
 }
 
+export async function getDatasetOutliers(id) {
+  const { data } = await client.get(`/datasets/${id}/outliers`);
+  return data;
+}
+
 export async function uploadDataset(file, { onProgress } = {}) {
   const formData = new FormData();
   formData.append("file", file);

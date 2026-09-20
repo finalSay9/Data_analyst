@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
 import { ArrowLeft, Rows3, Columns3, Database, FileText } from "lucide-react";
-import { getDataset, getDatasetProfile, getDatasetCorrelations } from "../api/datasets";
+import { getDataset, getDatasetProfile, getDatasetCorrelations, getDatasetOutliers } from "../api/datasets";
 import { useApi } from "../hooks/useApi";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
@@ -9,10 +9,12 @@ import StatusBadge from "../components/StatusBadge";
 import StatCard from "../components/StatCard";
 import ColumnProfileCard from "../components/ColumnProfileCard";
 import CorrelationsPanel from "../components/CorrelationsPanel";
+import OutliersPanel from "../components/OutliersPanel";
 
 const TABS = [
   { id: "profile", label: "Column profile" },
   { id: "correlations", label: "Correlations" },
+  { id: "outliers", label: "Outliers" },
 ];
 
 export default function DatasetDetailPage() {
@@ -36,6 +38,12 @@ export default function DatasetDetailPage() {
     loading: correlationsLoading,
     error: correlationsError,
   } = useApi(() => getDatasetCorrelations(id), [id]);
+
+  const {
+    data: outliers,
+    loading: outliersLoading,
+    error: outliersError,
+  } = useApi(() => getDatasetOutliers(id), [id]);
 
   if (datasetLoading) return <LoadingSpinner label="Loading dataset..." />;
   if (datasetError) return <ErrorMessage message={datasetError} />;
@@ -112,6 +120,16 @@ export default function DatasetDetailPage() {
           {correlationsError && <ErrorMessage message={correlationsError} />}
           {!correlationsLoading && !correlationsError && correlations && (
             <CorrelationsPanel data={correlations} />
+          )}
+        </>
+      )}
+
+      {activeTab === "outliers" && (
+        <>
+          {outliersLoading && <LoadingSpinner label="Detecting outliers..." />}
+          {outliersError && <ErrorMessage message={outliersError} />}
+          {!outliersLoading && !outliersError && outliers && (
+            <OutliersPanel data={outliers} />
           )}
         </>
       )}
