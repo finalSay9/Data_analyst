@@ -25,8 +25,6 @@ from sqlalchemy.engine import Engine
 
 from app.models.dataset import Dataset
 
-
-
 _TOP_VALUES_LIMIT = 5
 
 

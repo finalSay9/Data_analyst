@@ -22,6 +22,8 @@ from app.core.database import get_db, get_engine
 from app.models.dataset import Dataset
 from app.schemas.dataset import (
     ColumnProfileRead,
+    CorrelationPairRead,
+    CorrelationResponse,
     DatasetProfileResponse,
     DatasetRead,
     DatasetSummary,
@@ -29,6 +31,7 @@ from app.schemas.dataset import (
 )
 from app.services.ingestion_service import UnsupportedFileTypeError, ingest_file
 from app.analytics.profiling import profile_dataset
+from app.analytics.statistics import compute_correlations
 
 router = APIRouter()
 
@@ -113,4 +116,25 @@ def get_dataset_profile(
         dataset_id=dataset.id,
         row_count=dataset.row_count,
         columns=[ColumnProfileRead(**vars(p)) for p in profiles],
+    )
+
+
+@router.get("/{dataset_id}/correlations", response_model=CorrelationResponse)
+def get_dataset_correlations(
+    dataset_id: int,
+    db: Session = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> CorrelationResponse:
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+
+    result = compute_correlations(engine, dataset)
+
+    return CorrelationResponse(
+        dataset_id=dataset.id,
+        numeric_columns=result.numeric_columns,
+        matrix=result.matrix,
+        pairs=[CorrelationPairRead(**vars(p)) for p in result.pairs],
+        insufficient_columns=result.insufficient_columns,
     )

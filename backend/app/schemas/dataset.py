@@ -74,6 +74,21 @@ class DatasetProfileResponse(BaseModel):
     columns: list[ColumnProfileRead]
 
 
+class CorrelationPairRead(BaseModel):
+    column_a: str
+    column_b: str
+    correlation: float
+    strength: str
+
+
+class CorrelationResponse(BaseModel):
+    dataset_id: int
+    numeric_columns: list[str]
+    matrix: list[list[float | None]] = []
+    pairs: list[CorrelationPairRead] = []
+    insufficient_columns: bool = False
+
+
 class FailedRow(BaseModel):
     row_index: int
     error: str

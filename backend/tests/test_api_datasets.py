@@ -146,3 +146,35 @@ class TestProfileEndpoint:
     def test_profile_nonexistent_dataset_returns_404(self, client):
         response = client.get("/api/v1/datasets/99999/profile")
         assert response.status_code == 404
+
+
+class TestCorrelationsEndpoint:
+    def test_correlations_returns_pairs_for_numeric_columns(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload",
+            files=make_csv_file("x,y\n1,2\n2,4\n3,6\n4,8\n"),
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(f"/api/v1/datasets/{dataset_id}/correlations")
+        assert response.status_code == 200
+
+        body = response.json()
+        assert body["insufficient_columns"] is False
+        assert body["pairs"][0]["correlation"] == 1.0
+        assert body["pairs"][0]["strength"] == "strong"
+
+    def test_correlations_flags_insufficient_numeric_columns(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload",
+            files=make_csv_file("label\na\nb\nc\n"),
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(f"/api/v1/datasets/{dataset_id}/correlations")
+        assert response.status_code == 200
+        assert response.json()["insufficient_columns"] is True
+
+    def test_correlations_nonexistent_dataset_returns_404(self, client):
+        response = client.get("/api/v1/datasets/99999/correlations")
+        assert response.status_code == 404
