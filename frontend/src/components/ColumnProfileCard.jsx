@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 
 const TYPE_META = {
-  integer: { icon: Hash, label: "Integer", color: "text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400" },
+  integer: { icon: Hash, label: "Integer", color: "text-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 dark:text-cyan-400" },
   float: { icon: TrendingUp, label: "Float", color: "text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-400" },
-  boolean: { icon: ToggleLeft, label: "Boolean", color: "text-teal-600 bg-teal-50 dark:bg-teal-900/30 dark:text-teal-400" },
+  boolean: { icon: ToggleLeft, label: "Boolean", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400" },
   datetime: { icon: Calendar, label: "Datetime", color: "text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-400" },
   string: { icon: Type, label: "String", color: "text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300" },
 };
