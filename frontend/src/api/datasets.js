@@ -22,6 +22,11 @@ export async function getDatasetProfile(id) {
   return data;
 }
 
+export async function getDatasetCorrelations(id) {
+  const { data } = await client.get(`/datasets/${id}/correlations`);
+  return data;
+}
+
 export async function uploadDataset(file, { onProgress } = {}) {
   const formData = new FormData();
   formData.append("file", file);

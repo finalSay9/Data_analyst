@@ -1,15 +1,23 @@
 import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
 import { ArrowLeft, Rows3, Columns3, Database, FileText } from "lucide-react";
-import { getDataset, getDatasetProfile } from "../api/datasets";
+import { getDataset, getDatasetProfile, getDatasetCorrelations } from "../api/datasets";
 import { useApi } from "../hooks/useApi";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import StatusBadge from "../components/StatusBadge";
 import StatCard from "../components/StatCard";
 import ColumnProfileCard from "../components/ColumnProfileCard";
+import CorrelationsPanel from "../components/CorrelationsPanel";
+
+const TABS = [
+  { id: "profile", label: "Column profile" },
+  { id: "correlations", label: "Correlations" },
+];
 
 export default function DatasetDetailPage() {
   const { id } = useParams();
+  const [activeTab, setActiveTab] = useState("profile");
 
   const {
     data: dataset,
@@ -22,6 +30,12 @@ export default function DatasetDetailPage() {
     loading: profileLoading,
     error: profileError,
   } = useApi(() => getDatasetProfile(id), [id]);
+
+  const {
+    data: correlations,
+    loading: correlationsLoading,
+    error: correlationsError,
+  } = useApi(() => getDatasetCorrelations(id), [id]);
 
   if (datasetLoading) return <LoadingSpinner label="Loading dataset..." />;
   if (datasetError) return <ErrorMessage message={datasetError} />;
@@ -62,19 +76,44 @@ export default function DatasetDetailPage() {
         />
       </div>
 
-      <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">
-        Column profile
-      </h2>
+      <div className="mb-4 flex gap-1 border-b border-slate-200 dark:border-slate-800">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? "border-brand-600 text-brand-700 dark:text-brand-400"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {profileLoading && <LoadingSpinner label="Computing profile..." />}
-      {profileError && <ErrorMessage message={profileError} />}
+      {activeTab === "profile" && (
+        <>
+          {profileLoading && <LoadingSpinner label="Computing profile..." />}
+          {profileError && <ErrorMessage message={profileError} />}
+          {!profileLoading && !profileError && profile && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {profile.columns.map((column) => (
+                <ColumnProfileCard key={column.name} column={column} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
-      {!profileLoading && !profileError && profile && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {profile.columns.map((column) => (
-            <ColumnProfileCard key={column.name} column={column} />
-          ))}
-        </div>
+      {activeTab === "correlations" && (
+        <>
+          {correlationsLoading && <LoadingSpinner label="Computing correlations..." />}
+          {correlationsError && <ErrorMessage message={correlationsError} />}
+          {!correlationsLoading && !correlationsError && correlations && (
+            <CorrelationsPanel data={correlations} />
+          )}
+        </>
       )}
     </div>
   );
