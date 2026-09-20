@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.core.database import get_db, get_engine
 from app.models.dataset import Dataset
 from app.schemas.dataset import (
+    AggregationResponse,
     ColumnOutliersRead,
     ColumnProfileRead,
     CorrelationPairRead,
@@ -29,6 +30,7 @@ from app.schemas.dataset import (
     DatasetRead,
     DatasetSummary,
     DatasetUploadResponse,
+    GroupResultRead,
     OutlierPointRead,
     OutlierResponse,
 )
@@ -36,6 +38,12 @@ from app.services.ingestion_service import UnsupportedFileTypeError, ingest_file
 from app.analytics.profiling import profile_dataset
 from app.analytics.statistics import compute_correlations
 from app.analytics.outliers import detect_outliers
+from app.analytics.aggregations import (
+    AggregationFunction,
+    ColumnNotFoundError,
+    InvalidAggregationError,
+    compute_aggregation,
+)
 
 router = APIRouter()
 
@@ -172,4 +180,37 @@ def get_dataset_outliers(
             )
             for c in result.columns
         ],
+    )
+
+
+@router.get("/{dataset_id}/aggregations", response_model=AggregationResponse)
+def get_dataset_aggregations(
+    dataset_id: int,
+    group_by: str,
+    function: AggregationFunction,
+    agg_column: str | None = None,
+    db: Session = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> AggregationResponse:
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+
+    try:
+        result = compute_aggregation(engine, dataset, group_by, function, agg_column)
+    except ColumnNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except InvalidAggregationError as e:
+        # Well-formed request, but a semantic mismatch (e.g. summing a
+        # string column) -- 400, not 404/500.
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return AggregationResponse(
+        dataset_id=dataset.id,
+        group_by_column=result.group_by_column,
+        agg_column=result.agg_column,
+        function=result.function.value,
+        total_groups=result.total_groups,
+        too_many_groups=result.too_many_groups,
+        groups=[GroupResultRead(**vars(g)) for g in result.groups],
     )

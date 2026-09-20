@@ -199,3 +199,67 @@ class TestOutliersEndpoint:
     def test_outliers_nonexistent_dataset_returns_404(self, client):
         response = client.get("/api/v1/datasets/99999/outliers")
         assert response.status_code == 404
+
+
+class TestAggregationsEndpoint:
+    def test_sum_aggregation_via_query_params(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload",
+            files=make_csv_file("category,price\na,10\na,20\nb,5\n"),
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(
+            f"/api/v1/datasets/{dataset_id}/aggregations",
+            params={"group_by": "category", "function": "sum", "agg_column": "price"},
+        )
+        assert response.status_code == 200
+
+        groups = {g["group_value"]: g["value"] for g in response.json()["groups"]}
+        assert groups["a"] == 30
+        assert groups["b"] == 5
+
+    def test_count_without_agg_column_via_query_params(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload", files=make_csv_file("category\na\na\nb\n")
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(
+            f"/api/v1/datasets/{dataset_id}/aggregations",
+            params={"group_by": "category", "function": "count"},
+        )
+        assert response.status_code == 200
+        groups = {g["group_value"]: g["row_count"] for g in response.json()["groups"]}
+        assert groups["a"] == 2
+
+    def test_invalid_column_returns_404(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload", files=make_csv_file("category,price\na,10\n")
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(
+            f"/api/v1/datasets/{dataset_id}/aggregations",
+            params={"group_by": "nonexistent", "function": "sum", "agg_column": "price"},
+        )
+        assert response.status_code == 404
+
+    def test_sum_on_string_column_returns_400(self, client):
+        upload_response = client.post(
+            "/api/v1/datasets/upload", files=make_csv_file("category,label\na,x\nb,y\n")
+        )
+        dataset_id = upload_response.json()["dataset"]["id"]
+
+        response = client.get(
+            f"/api/v1/datasets/{dataset_id}/aggregations",
+            params={"group_by": "category", "function": "sum", "agg_column": "label"},
+        )
+        assert response.status_code == 400
+
+    def test_aggregations_nonexistent_dataset_returns_404(self, client):
+        response = client.get(
+            "/api/v1/datasets/99999/aggregations",
+            params={"group_by": "x", "function": "sum", "agg_column": "y"},
+        )
+        assert response.status_code == 404

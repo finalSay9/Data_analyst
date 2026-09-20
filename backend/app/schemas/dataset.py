@@ -112,6 +112,22 @@ class OutlierResponse(BaseModel):
     columns: list[ColumnOutliersRead] = []
 
 
+class GroupResultRead(BaseModel):
+    group_value: str
+    row_count: int
+    value: float | None
+
+
+class AggregationResponse(BaseModel):
+    dataset_id: int
+    group_by_column: str
+    agg_column: str | None
+    function: str
+    groups: list[GroupResultRead] = []
+    total_groups: int = 0
+    too_many_groups: bool = False
+
+
 class FailedRow(BaseModel):
     row_index: int
     error: str

@@ -10,11 +10,13 @@ import StatCard from "../components/StatCard";
 import ColumnProfileCard from "../components/ColumnProfileCard";
 import CorrelationsPanel from "../components/CorrelationsPanel";
 import OutliersPanel from "../components/OutliersPanel";
+import AggregationsPanel from "../components/AggregationsPanel";
 
 const TABS = [
   { id: "profile", label: "Column profile" },
   { id: "correlations", label: "Correlations" },
   { id: "outliers", label: "Outliers" },
+  { id: "aggregations", label: "Aggregations" },
 ];
 
 export default function DatasetDetailPage() {
@@ -133,6 +135,8 @@ export default function DatasetDetailPage() {
           )}
         </>
       )}
+
+      {activeTab === "aggregations" && <AggregationsPanel dataset={dataset} />}
     </div>
   );
 }

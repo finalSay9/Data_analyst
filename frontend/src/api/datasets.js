@@ -32,6 +32,17 @@ export async function getDatasetOutliers(id) {
   return data;
 }
 
+export async function getDatasetAggregations(id, { groupBy, func, aggColumn }) {
+  const { data } = await client.get(`/datasets/${id}/aggregations`, {
+    params: {
+      group_by: groupBy,
+      function: func,
+      ...(aggColumn ? { agg_column: aggColumn } : {}),
+    },
+  });
+  return data;
+}
+
 export async function uploadDataset(file, { onProgress } = {}) {
   const formData = new FormData();
   formData.append("file", file);
