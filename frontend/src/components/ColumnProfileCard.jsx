@@ -1,6 +1,5 @@
 import {
   Hash,
-  Percent,
   ToggleLeft,
   Calendar,
   Type,

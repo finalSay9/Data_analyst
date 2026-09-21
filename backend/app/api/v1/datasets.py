@@ -30,7 +30,9 @@ from app.schemas.dataset import (
     DatasetRead,
     DatasetSummary,
     DatasetUploadResponse,
+    DistributionResponse,
     GroupResultRead,
+    HistogramBinRead,
     OutlierPointRead,
     OutlierResponse,
 )
@@ -43,6 +45,11 @@ from app.analytics.aggregations import (
     ColumnNotFoundError,
     InvalidAggregationError,
     compute_aggregation,
+)
+from app.analytics.distributions import (
+    ColumnNotFoundError as DistributionColumnNotFoundError,
+    InvalidDistributionError,
+    compute_distribution,
 )
 
 router = APIRouter()
@@ -213,4 +220,34 @@ def get_dataset_aggregations(
         total_groups=result.total_groups,
         too_many_groups=result.too_many_groups,
         groups=[GroupResultRead(**vars(g)) for g in result.groups],
+    )
+
+
+@router.get("/{dataset_id}/distributions", response_model=DistributionResponse)
+def get_dataset_distribution(
+    dataset_id: int,
+    column: str,
+    bins: int | None = None,
+    db: Session = Depends(get_db),
+    engine: Engine = Depends(get_engine),
+) -> DistributionResponse:
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+
+    try:
+        result = compute_distribution(engine, dataset, column, bins)
+    except DistributionColumnNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except InvalidDistributionError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return DistributionResponse(
+        dataset_id=dataset.id,
+        column=result.column,
+        bins=[HistogramBinRead(**vars(b)) for b in result.bins],
+        min_value=result.min_value,
+        max_value=result.max_value,
+        mean=result.mean,
+        total_count=result.total_count,
     )

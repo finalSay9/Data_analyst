@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UploadCloud, FileSpreadsheet, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { X, UploadCloud, FileSpreadsheet, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { uploadDataset, getErrorMessage } from "../api/datasets";
+import IconBadge from "../components/IconBadge";
 
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
@@ -119,7 +120,7 @@ export default function UploadPage() {
           {file && (
             <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex min-w-0 items-center gap-3">
-                <FileSpreadsheet className="h-5 w-5 shrink-0 text-brand-600 dark:text-brand-400" />
+                <IconBadge icon={FileSpreadsheet} size="sm" />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
                     {file.name}
@@ -176,9 +177,7 @@ export default function UploadPage() {
       {result && (
         <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-emerald-50 p-2 dark:bg-emerald-900/30">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
+            <IconBadge icon={CheckCircle2} size="lg" color="emerald" shape="circle" />
             <div>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {result.dataset.name}

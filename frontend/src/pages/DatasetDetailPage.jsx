@@ -11,12 +11,14 @@ import ColumnProfileCard from "../components/ColumnProfileCard";
 import CorrelationsPanel from "../components/CorrelationsPanel";
 import OutliersPanel from "../components/OutliersPanel";
 import AggregationsPanel from "../components/AggregationsPanel";
+import DistributionsPanel from "../components/DistributionsPanel";
 
 const TABS = [
   { id: "profile", label: "Column profile" },
   { id: "correlations", label: "Correlations" },
   { id: "outliers", label: "Outliers" },
   { id: "aggregations", label: "Aggregations" },
+  { id: "distributions", label: "Distributions" },
 ];
 
 export default function DatasetDetailPage() {
@@ -137,6 +139,8 @@ export default function DatasetDetailPage() {
       )}
 
       {activeTab === "aggregations" && <AggregationsPanel dataset={dataset} />}
+
+      {activeTab === "distributions" && <DistributionsPanel dataset={dataset} />}
     </div>
   );
 }

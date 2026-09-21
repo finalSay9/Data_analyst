@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { FileSpreadsheet, Rows3, Clock } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import IconBadge from "./IconBadge";
 
 function formatRelativeTime(isoString) {
   const date = new Date(isoString);
@@ -23,9 +24,7 @@ export default function DatasetCard({ dataset }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="shrink-0 rounded-lg bg-brand-50 p-2 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
-            <FileSpreadsheet className="h-4.5 w-4.5" />
-          </div>
+          <IconBadge icon={FileSpreadsheet} size="md" />
           <h3 className="truncate font-semibold text-slate-900 dark:text-white group-hover:text-brand-700 dark:group-hover:text-brand-400">
             {dataset.name}
           </h3>

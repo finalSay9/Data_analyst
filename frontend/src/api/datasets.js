@@ -43,6 +43,13 @@ export async function getDatasetAggregations(id, { groupBy, func, aggColumn }) {
   return data;
 }
 
+export async function getDatasetDistribution(id, column, bins) {
+  const { data } = await client.get(`/datasets/${id}/distributions`, {
+    params: { column, ...(bins ? { bins } : {}) },
+  });
+  return data;
+}
+
 export async function uploadDataset(file, { onProgress } = {}) {
   const formData = new FormData();
   formData.append("file", file);

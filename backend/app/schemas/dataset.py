@@ -128,6 +128,22 @@ class AggregationResponse(BaseModel):
     too_many_groups: bool = False
 
 
+class HistogramBinRead(BaseModel):
+    range_start: float
+    range_end: float
+    count: int
+
+
+class DistributionResponse(BaseModel):
+    dataset_id: int
+    column: str
+    bins: list[HistogramBinRead] = []
+    min_value: float = 0.0
+    max_value: float = 0.0
+    mean: float = 0.0
+    total_count: int = 0
+
+
 class FailedRow(BaseModel):
     row_index: int
     error: str
