@@ -1,11 +1,15 @@
 
-data = [88,3,0,1,21,9,8,2,3]
+data = [1,88,3,0,1,21,9,8,2,3]
+unique_data = []
 
-for d in range(len(data)):
-    for i in range(1,len(data)):
-        if data[i] < data[i - 1]:
-            if data[i] == data[i-1]:
-                data[i]
-            data[i], data[i - 1] = data[i - 1], data[i]
+for number in data:
+    if number not in unique_data:
+        unique_data.append(number)
 
-print(data)
+for d in range(len(unique_data)):
+    for i in range(1, len(unique_data)):
+        if unique_data[i] < unique_data[i-1]:
+            unique_data[i], unique_data[i-1] = unique_data[i-1], unique_data[i]
+
+
+print(unique_data)
